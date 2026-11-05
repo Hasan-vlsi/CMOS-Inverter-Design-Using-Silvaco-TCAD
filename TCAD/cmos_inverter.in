@@ -1,0 +1,144 @@
+go atlas
+
+mesh space.mult=1.0
+
+x.mesh loc=0.00 spac=0.005
+x.mesh loc=1 spac=0.005
+
+y.mesh loc=0 spac=0.005
+y.mesh loc=0.145 spac=0.005
+y.mesh loc=0.250 spac=0.010
+y.mesh loc=0.350 spac=0.050
+y.mesh loc=0.550 spac=0.050
+y.mesh loc=0.650 spac=0.010
+y.mesh loc=0.750 spac=0.050
+y.mesh loc=1 spac=0.050
+
+
+region num=1 x.min=0 x.max=1 y.min=0 y.max=0.150 mat=air
+
+region num=2 x.min=0 x.max=1 y.min=0.150 y.max=1 mat=Si
+
+region num=3 x.min=0.5 x.max=0.9 y.min=0.150 y.max=0.650 mat=Si
+
+region num=4 x.min=0 x.max=0.1 y.min=0.150 y.max=0.250 mat=Si
+
+region num=5 x.min=0.145 x.max=0.245 y.min=0.150 y.max=0.250 mat=Si
+
+region num=6 x.min=0.1 x.max=0.145 y.min=0.145 y.max=0.150 mat=oxide
+
+region num=7 x.min=0.1 x.max=0.145 y.min=0 y.max=0.145 mat=Aluminum
+
+
+region num=8 x.min=0.555 x.max=0.655 y.min=0.150 y.max=0.250 mat=Si
+
+region num=9 x.min=0.7 x.max=0.8 y.min=0.150 y.max=0.250 mat=Si
+
+region num=10 x.min=0.655 x.max=0.7 y.min=0.145 y.max=0.150 mat=oxide
+
+region num=11 x.min=0.655 x.max=0.7 y.min=0 y.max=0.145 mat=Aluminum
+
+region num=12 x.min=0.3 x.max=0.4 y.min=0.150 y.max=0.650 mat=oxide
+
+region num=13 x.min=0.020 x.max=0.080 y.min=0.05 y.max=0.150 mat=Aluminum
+
+region num=14 x.min=0.165 x.max=0.225 y.min=0.05 y.max=0.150 mat=Aluminum
+
+region num=15 x.min=0.575 x.max=0.635 y.min=0.05 y.max=0.150 mat=Aluminum
+
+region num=16 x.min=0.720 x.max=0.780 y.min=0.05 y.max=0.150 mat=Aluminum
+
+
+elec num=1 name=substrate x.min=0 x.max=1 y.min=1 y.max=1
+
+elec num=2 name=source x.min=0.020 x.max=0.080 y.min=0.05 y.max=0.150
+
+elec num=3 name=drain x.min=0.165 x.max=0.225 y.min=0.05 y.max=0.150
+
+elec num=4 name=gate x.min=0.1 x.max=0.145 y.min=0.0 y.max=0.145
+
+
+save outfile=cmos45_habib.str
+
+go atlas
+
+mesh infile=cmos45_habib.str
+
+doping uniform p.type conc=3e18 reg=2
+doping uniform n.type conc=3e18 reg=3
+
+doping uniform n.type conc=1e20 reg=4
+doping uniform n.type conc=1e20 reg=5
+
+doping uniform p.type conc=1e20 reg=8
+doping uniform p.type conc=1e20 reg=9
+
+
+models bipolar fermi srh fldmob conmob auger optr print
+
+output band.temp con.band val.band charge polar.charge band.param e.mobility h.mobility u.srh u.radiative u.auger permi flowlines
+
+method newton trap itlimit=20 maxtrap=20
+
+solve init
+
+save outf=cmos45nm.str
+tonyplot cmos45nm.str
+
+
+######################################################################
+
+solve init
+solve vdrain=3
+
+log outf=ID_vs_VGS.log
+solve name=gate vgate=0 vfinal=3 vstep=0.1
+log off
+
+tonyplot ID_vs_VGS.log
+
+save outfile=cmos_ID_vs_VGS.str
+tonyplot cmos_ID_vs_VGS.str
+
+log off
+
+
+######################################################################
+
+solve init
+solve vgate=3
+
+log outf=ID_vs_VDS.log
+solve name=drain vdrain=0 vfinal=3 vstep=0.1
+log off
+
+tonyplot ID_vs_VDS.log
+
+save outfile=cmos_ID_vs_VDS.str
+tonyplot cmos_ID_vs_VDS.str
+
+log off
+
+
+######################################################################
+
+solve init
+solve vsource=0
+solve vdrain=3
+
+contact name=drain current
+contact name=source current
+
+log outf=VD_vs_VGS.log
+solve name=gate vgate=0 vfinal=3 vstep=0.1
+log off
+
+tonyplot VD_vs_VGS.log
+
+save outfile=cmos_VD_vs_VGS.str
+tonyplot cmos_VD_vs_VGS.str
+
+
+######################################################################
+
+quit
